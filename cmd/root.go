@@ -5,18 +5,9 @@ import (
     "os"
 
     "github.com/spf13/cobra"
-    "github.com/thio/nurlaily/internal/build"
-    "github.com/thio/nurlaily/internal/draft"
-)
-
-// Warna ANSI untuk output terminal yang enak dilihat
-const (
-    reset  = "\033[0m"
-    green  = "\033[32m"
-    cyan   = "\033[36m"
-    purple = "\033[35m"
-    gray   = "\033[90m"
-    yellow = "\033[33m"
+    "github.com/flessan/nurlaily/internal/build"
+    "github.com/flessan/nurlaily/internal/draft"
+    S "github.com/flessan/nurlaily/internal/style"
 )
 
 var rootCmd = &cobra.Command{
@@ -32,7 +23,6 @@ Cara pakai:
     SilenceUsage: true,
 }
 
-// Perintah: laily draft "isi catatan"
 var draftCmd = &cobra.Command{
     Use:   "draft [teks]",
     Short: "Tulis catatan baru ke jurnal hari ini",
@@ -40,31 +30,29 @@ var draftCmd = &cobra.Command{
     Run: func(cmd *cobra.Command, args []string) {
         text := args[0]
         if err := draft.Write(text); err != nil {
-            fmt.Fprintf(os.Stderr, "%s✗%s %s\n", red(), reset, err)
+            fmt.Fprintf(os.Stderr, "%s✗%s %s\n", S.Red, S.Reset, err)
             os.Exit(1)
         }
     },
 }
 
-// Perintah: laily build
 var buildCmd = &cobra.Command{
     Use:   "build",
     Short: "Bangun website statis dari semua draft",
     Run: func(cmd *cobra.Command, args []string) {
         if err := build.Run(); err != nil {
-            fmt.Fprintf(os.Stderr, "%s✗%s %s\n", red(), reset, err)
+            fmt.Fprintf(os.Stderr, "%s✗%s %s\n", S.Red, S.Reset, err)
             os.Exit(1)
         }
     },
 }
 
-// Perintah: laily list
 var listCmd = &cobra.Command{
     Use:   "list",
     Short: "Tampilkan semua draft yang tersimpan",
     Run: func(cmd *cobra.Command, args []string) {
         if err := draft.List(); err != nil {
-            fmt.Fprintf(os.Stderr, "%s✗%s %s\n", red(), reset, err)
+            fmt.Fprintf(os.Stderr, "%s✗%s %s\n", S.Red, S.Reset, err)
             os.Exit(1)
         }
     },
@@ -81,15 +69,3 @@ func Execute() {
         os.Exit(1)
     }
 }
-
-// red mengembalikan kode warna merah ANSI
-func red() string { return "\033[31m" }
-
-// Export warna agar bisa dipakai package lain
-func Green() string  { return green }
-func Cyan() string   { return cyan }
-func Purple() string { return purple }
-func Gray() string   { return gray }
-func Yellow() string { return yellow }
-func Reset() string  { return reset }
-func Red() string    { return red() }

@@ -8,12 +8,11 @@ import (
     "strings"
     "time"
 
-    C "github.com/thio/nurlaily/cmd"
+    S "github.com/flessan/nurlaily/internal/style"
 )
 
 const draftsDir = "drafts"
 
-// Write menambahkan catatan baru ke file markdown hari ini.
 func Write(text string) error {
     if err := os.MkdirAll(draftsDir, 0755); err != nil {
         return fmt.Errorf("gagal membuat folder %s: %w", draftsDir, err)
@@ -29,7 +28,6 @@ func Write(text string) error {
     }
     defer f.Close()
 
-    // Setiap catatan diberi timestamp jam:menit
     waktu := now.Format("15:04")
     entry := fmt.Sprintf("\n## %s\n%s\n", waktu, text)
 
@@ -37,24 +35,22 @@ func Write(text string) error {
         return fmt.Errorf("gagal menulis ke file: %w", err)
     }
 
-    // Output terminal yang cantik
     fmt.Printf("%s✓%s Catatan disimpan di %s%s%s\n",
-        C.Green(), C.Reset(), C.Cyan(), fp, C.Reset())
+        S.Green, S.Reset, S.Cyan, fp, S.Reset)
     fmt.Printf("  %s%s%s\n",
-        C.Gray(), truncate(text, 55), C.Reset())
+        S.Gray, truncate(text, 55), S.Reset)
 
     return nil
 }
 
-// List menampilkan semua file draft yang ada.
 func List() error {
     entries, err := os.ReadDir(draftsDir)
     if err != nil {
         if os.IsNotExist(err) {
             fmt.Printf("%s⚠%s Folder %s%s%s belum ada.\n",
-                C.Yellow(), C.Reset(), C.Cyan(), draftsDir, C.Reset())
+                S.Yellow, S.Reset, S.Cyan, draftsDir, S.Reset)
             fmt.Printf("  Mulai menulis: %slaily draft \"catatanmu\"%s\n",
-                C.Purple(), C.Reset())
+                S.Purple, S.Reset)
             return nil
         }
         return fmt.Errorf("gagal membaca folder: %w", err)
@@ -68,15 +64,14 @@ func List() error {
     }
 
     if len(files) == 0 {
-        fmt.Printf("%s⚠%s Belum ada draft.\n", C.Yellow(), C.Reset())
+        fmt.Printf("%s⚠%s Belum ada draft.\n", S.Yellow, S.Reset)
         return nil
     }
 
-    // Urutkan dari terbaru
     sort.Sort(sort.Reverse(sort.StringSlice(files)))
 
-    fmt.Printf("%s%sNurLaily — Daftar Draft%s\n", C.Purple(), C.Gray(), C.Reset())
-    fmt.Printf("%s%s────────────────────%s\n\n", C.Purple(), C.Gray(), C.Reset())
+    fmt.Printf("%s%sNurLaily — Daftar Draft%s\n", S.Purple, S.Gray, S.Reset)
+    fmt.Printf("%s%s────────────────────%s\n\n", S.Purple, S.Gray, S.Reset)
 
     for _, f := range files {
         date := strings.TrimSuffix(f, ".md")
@@ -90,11 +85,11 @@ func List() error {
             }
         }
         fmt.Printf("  %s%s%s  %s%s%s\n",
-            C.Cyan(), date, C.Reset(),
-            C.Gray(), size, C.Reset())
+            S.Cyan, date, S.Reset,
+            S.Gray, size, S.Reset)
     }
 
-    fmt.Printf("\n  Total: %s%d%s file\n", C.Cyan(), len(files), C.Reset())
+    fmt.Printf("\n  Total: %s%d%s file\n", S.Cyan, len(files), S.Reset)
     return nil
 }
 

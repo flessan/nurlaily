@@ -10,15 +10,14 @@ import (
     "time"
 
     "github.com/yuin/goldmark"
-    C "github.com/thio/nurlaily/cmd"
-    tpl "github.com/thio/nurlaily/internal/template"
+    S "github.com/flessan/nurlaily/internal/style"
+    tpl "github.com/flessan/nurlaily/internal/template"
 )
 
 const distDir = "dist"
 
-// Run membaca semua .md di drafts/, konversi ke HTML, suntik ke template, tulis ke dist/.
 func Run() error {
-    fmt.Printf("%s⚡%s Membangun website statis...\n", C.Purple(), C.Reset())
+    fmt.Printf("%s⚡%s Membangun website statis...\n", S.Purple, S.Reset)
 
     entries, err := readAllDrafts()
     if err != nil {
@@ -27,9 +26,9 @@ func Run() error {
 
     if len(entries) == 0 {
         fmt.Printf("%s⚠%s Tidak ada draft di folder %s%s%s\n",
-            C.Yellow(), C.Reset(), C.Cyan(), "drafts/", C.Reset())
+            S.Yellow, S.Reset, S.Cyan, "drafts/", S.Reset)
         fmt.Printf("  Mulai menulis: %slaily draft \"catatanmu\"%s\n",
-            C.Purple(), C.Reset())
+            S.Purple, S.Reset)
         return nil
     }
 
@@ -48,14 +47,13 @@ func Run() error {
     }
 
     fmt.Printf("%s✓%s %s%d%s draft diproses\n",
-        C.Green(), C.Reset(), C.Cyan(), len(entries), C.Reset())
+        S.Green, S.Reset, S.Cyan, len(entries), S.Reset)
     fmt.Printf("%s✓%s Website siap di %s%s%s\n",
-        C.Green(), C.Reset(), C.Cyan(), outPath, C.Reset())
+        S.Green, S.Reset, S.Cyan, outPath, S.Reset)
 
     return nil
 }
 
-// readAllDrafts membaca semua file .md dan mengubahnya ke Entry.
 func readAllDrafts() ([]tpl.Entry, error) {
     md := goldmark.New()
     var entries []tpl.Entry
@@ -73,27 +71,25 @@ func readAllDrafts() ([]tpl.Entry, error) {
             return fmt.Errorf("gagal baca %s: %w", path, err)
         }
 
-        // Konversi Markdown → HTML
         var buf strings.Builder
         if err := md.Convert(raw, &buf); err != nil {
             return fmt.Errorf("gagal konversi %s: %w", path, err)
         }
 
-        // Ekstrak tanggal dari nama file (2026-04-23.md)
         basename := strings.TrimSuffix(filepath.Base(path), ".md")
         t, err := time.Parse("2006-01-02", basename)
         if err != nil {
-            return nil // lewati file dengan nama tidak valid
+            return nil
         }
 
         slug := strings.ReplaceAll(basename, "-", "")
 
         entries = append(entries, tpl.Entry{
-            DateRaw: basename,                    // "2026-04-23" — untuk sorting
-            Date:    t.Format("2 January 2006"),   // "23 April 2026" — untuk tampilan
-            Slug:    slug,                         // "20260423" — untuk anchor ID
-            Content: tpl.HTML(buf.String()),       // template.HTML supaya tidak di-escape
-            Preview: extractPreview(string(raw)),  // baris pertama yang bermakna
+            DateRaw: basename,
+            Date:    t.Format("2 January 2006"),
+            Slug:    slug,
+            Content: tpl.HTML(buf.String()),
+            Preview: extractPreview(string(raw)),
         })
         return nil
     })
@@ -102,7 +98,6 @@ func readAllDrafts() ([]tpl.Entry, error) {
         return nil, err
     }
 
-    // Urutkan dari terbaru ke terlama
     sort.Slice(entries, func(i, j int) bool {
         return entries[i].DateRaw > entries[j].DateRaw
     })
@@ -110,7 +105,6 @@ func readAllDrafts() ([]tpl.Entry, error) {
     return entries, nil
 }
 
-// extractPreview mengambil baris pertama yang bermakna dari source markdown.
 func extractPreview(md string) string {
     lines := strings.Split(strings.TrimSpace(md), "\n")
     for _, line := range lines {
@@ -118,11 +112,9 @@ func extractPreview(md string) string {
         if line == "" {
             continue
         }
-        // Lewati baris heading
         if strings.HasPrefix(line, "#") {
             continue
         }
-        // Bersihkan markdown formatting ringan
         line = strings.NewReplacer("**", "", "*", "", "`", "", "## ", "").Replace(line)
         if len(line) > 65 {
             return line[:65] + "..."

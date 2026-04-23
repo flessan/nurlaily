@@ -10,7 +10,7 @@
 ### Instalasi
 
 ```bash
-git clone https://github.com/thio/nurlaily.git
+git clone https://github.com/flessan/nurlaily.git
 cd nurlaily
 go mod tidy
 go build -o laily .
