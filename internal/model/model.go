@@ -1,10 +1,8 @@
 package model
 
-import "html/template"
-
 type EntryData struct {
     Time       string
-    Content    template.HTML
+    Content    string // akan di-pass sebagai template.HTML di render
     ContentRaw string
     Mood       string
     Tags       []string
