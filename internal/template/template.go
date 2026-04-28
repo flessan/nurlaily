@@ -1,54 +1,36 @@
 package template
 
 import (
-    _ "embed"
-    "fmt"
-    "html/template"
+    "embed"
     "strings"
+    "text/template"
+
+    "github.com/flessan/nurlaily/internal/model"
 )
 
-// HTML adalah alias dari template.HTML supaya package build bisa menulisnya
-// tanpa harus import "html/template" langsung.
-type HTML = template.HTML
-
-// Entry mewakili satu catatan jurnal yang sudah dikonversi.
-type Entry struct {
-    DateRaw string // "2026-01-02" — untuk sorting (tidak ditampilkan)
-    Date    string // "2 January 2006" — ditampilkan di UI
-    Slug    string // "20260102" — untuk ID elemen HTML
-    Content HTML   // konten markdown yang sudah jadi HTML
-    Preview string // satu baris preview untuk sidebar
-}
-
 //go:embed index.html
-var rawTemplate string
+var templateFS embed.FS
 
-// Render menyuntikkan data entries ke dalam template dan mengembalikan HTML lengkap.
-func Render(entries []Entry) (string, error) {
-    funcs := template.FuncMap{
-        "delay": func(i int) string {
-            return fmt.Sprintf("%dms", i*120)
+func Render(data model.PageData) (string, error) {
+    content, err := templateFS.ReadFile("index.html")
+    if err != nil {
+        return "", err
+    }
+
+    funcMap := template.FuncMap{
+        "join": func(sep string, tags []string) string {
+            return strings.Join(tags, sep)
         },
     }
 
-    t, err := template.New("index").Funcs(funcs).Parse(rawTemplate)
+    t, err := template.New("index").Funcs(funcMap).Parse(string(content))
     if err != nil {
-        return "", fmt.Errorf("parse template gagal: %w", err)
-    }
-
-    data := struct {
-        Title   string
-        Entries []Entry
-        Count   int
-    }{
-        Title:   "NurLaily — Daily Draft",
-        Entries: entries,
-        Count:   len(entries),
+        return "", err
     }
 
     var buf strings.Builder
     if err := t.Execute(&buf, data); err != nil {
-        return "", fmt.Errorf("eksekusi template gagal: %w", err)
+        return "", err
     }
 
     return buf.String(), nil
