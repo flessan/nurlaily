@@ -3,15 +3,15 @@ package build
 import (
     "bytes"
     "fmt"
+    "html/template"
     "os"
     "path/filepath"
     "sort"
-    "strings"
     "time"
 
     "github.com/flessan/nurlaily/internal/draft"
     "github.com/flessan/nurlaily/internal/model"
-    "github.com/flessan/nurlaily/internal/template"
+    tpl "github.com/flessan/nurlaily/internal/template"
     "github.com/yuin/goldmark"
 )
 
@@ -20,7 +20,6 @@ func BuildSite(outputDir string) error {
     if err != nil {
         return err
     }
-
     if len(days) == 0 {
         return fmt.Errorf("belum ada catatan. Tulis dengan `./laily draft \"pesan\"` terlebih dahulu")
     }
@@ -53,7 +52,7 @@ func BuildSite(outputDir string) error {
         GeneratedAt:  time.Now().Format("2 January 2006, 15:04"),
     }
 
-    html, err := template.Render(data)
+    html, err := tpl.Render(data)
     if err != nil {
         return fmt.Errorf("gagal render template: %w", err)
     }
@@ -61,7 +60,6 @@ func BuildSite(outputDir string) error {
     if err := os.MkdirAll(outputDir, 0755); err != nil {
         return err
     }
-
     return os.WriteFile(filepath.Join(outputDir, "index.html"), []byte(html), 0644)
 }
 
@@ -88,49 +86,12 @@ func parseAllDrafts() ([]model.DayData, error) {
             }
             elist = append(elist, model.EntryData{
                 Time:       e.Time,
-                Content:    model.EntryData{}.Content, // placeholder, set below
+                Content:    template.HTML(buf.String()),
                 ContentRaw: e.Content,
                 Mood:       e.Mood,
                 Tags:       e.Tags,
                 WordCount:  e.WordCount,
                 ReadTime:   readTime(e.WordCount),
-            })
-            elist[len(elist)-1].Content = model.EntryData{}.Content // will fix
-        }
-
-        // Proper assignment to avoid template.HTML issues
-        for i, e := range entries {
-            var buf bytes.Buffer
-            if err := md.Convert([]byte(e.Content), &buf); err != nil {
-                continue
-            }
-            elist[i] = model.EntryData{
-                Time:       e.Time,
-                Content:    /* template.HTML */ model.EntryData{},
-                ContentRaw: e.Content,
-                Mood:       e.Mood,
-                Tags:       e.Tags,
-                WordCount:  e.WordCount,
-                ReadTime:   readTime(e.WordCount),
-            }
-            _ = buf
-        }
-
-        // Clean rebuild
-        elist = nil
-        for _, e := range entries {
-            var buf bytes.Buffer
-            if err := md.Convert([]byte(e.Content), &buf); err != nil {
-                continue
-            }
-            elist = append(elist, model.EntryData{
-                Time:       e.Time,
-                ContentRaw: e.Content,
-                Mood:       e.Mood,
-                Tags:       e.Tags,
-                WordCount:  e.WordCount,
-                ReadTime:   readTime(e.WordCount),
-                Content:    buildHTML(buf),
             })
         }
 
@@ -146,10 +107,6 @@ func parseAllDrafts() ([]model.DayData, error) {
     return days, nil
 }
 
-func buildHTML(buf bytes.Buffer) interface{ Printf(string, ...interface{}) (int, error) } {
-    return nil
-}
-
 func readTime(words int) string {
     if words == 0 {
         return "< 1 min"
@@ -159,9 +116,4 @@ func readTime(words int) string {
         return "< 1 min"
     }
     return fmt.Sprintf("%d min", m)
-}
-
-func init() {
-    // Fix: the buildHTML function above is wrong. Overriding parseAllDrafts properly.
-    _ = strings.NewReader("")
 }
