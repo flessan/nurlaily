@@ -3,7 +3,6 @@ package build
 import (
     "bytes"
     "fmt"
-    "html/template"
     "os"
     "path/filepath"
     "sort"
@@ -86,7 +85,7 @@ func parseAllDrafts() ([]model.DayData, error) {
             }
             elist = append(elist, model.EntryData{
                 Time:       e.Time,
-                Content:    template.HTML(buf.String()),
+                Content:    buf.String(),
                 ContentRaw: e.Content,
                 Mood:       e.Mood,
                 Tags:       e.Tags,
