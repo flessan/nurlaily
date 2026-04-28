@@ -2,8 +2,8 @@ package template
 
 import (
     "embed"
+    "html/template"
     "strings"
-    "text/template"
 
     "github.com/flessan/nurlaily/internal/model"
 )
